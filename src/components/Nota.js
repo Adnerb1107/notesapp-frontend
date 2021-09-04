@@ -1,9 +1,9 @@
-export const Nota = ({content, date, important}) =>{
+export const Nota = ({title, body}) =>{
     return (
         <li>
-            <p>{content}</p>
-            <p>{date}</p>
-            <p>{important ? "Nota importante": "No interesa"}</p>
+            <p>{title}</p>
+            <p>{body}</p>
+            
         </li>
     )
 }

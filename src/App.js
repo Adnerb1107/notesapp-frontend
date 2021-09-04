@@ -1,55 +1,98 @@
 import {Nota} from './components/Nota';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
+import getAllNotes from './services/Notes/getAllNotes';
+import createNote from './services/Notes/createNote';
 
-const App = (props) =>{
-    const [notas, setNotas] = useState(props.notes);
+
+const App = () =>{
+    const [notas, setNotas] = useState([]);
     const [newNote, setNewNote] = useState('');
-    const [showAll, setShowAll] = useState(true);
-
-
+    const [error, setError] = useState(false);
+    const [loading, setLoading] = useState(false);
+    /*
+     // con fetch
+     useEffect(() => {
+      setLoading(true)
+      setTimeout(() => {        
+        fetch('https://jsonplaceholder.typicode.com/posts')          
+          .then(response => response.json())
+          .then(json=> setNotas(json))
+          setLoading(false)
+        }, 2000);
+      }, [])
+      // el array vacio implica que no se ejecutará solo la
+      // primera vez
+    */
+   useEffect(() => {
+     setLoading(true);
+     // importamos nuestro servicio getAllNotes
+     // el cual nos retorna data
+     getAllNotes().then(data=>{
+        setNotas(data)
+        setLoading(false)
+     }
+    )
+    //podemos limpiar el efecto con lo siguiente: 
+    // return () =>{
+    //     ... 
+    // }
+   }, [])
     const handleSubmit = (e)=>{
       e.preventDefault();
 
       console.log("crear nota")
       const noteToUpload = {
-        id:notas.length+1,
-        content: newNote,
-        date:new Date().toISOString(),
-        important: Math.random()<0.5
+        // el id se genera automaticamente con json placeholder
+        //id:notas.length+1,
+        title: newNote,
+        body:newNote,
+        userId: 1
       }      
-      setNotas(prevNotas => [...prevNotas,noteToUpload])
-      setNewNote('')
-    }
+      //setNotas(prevNotas => [...prevNotas,noteToUpload])
+      //setNewNote('')
+
+      /// DATO IMPORTANTE: 
+      /// CARGA OPTIMISTA: PODEMOS PINTAR EN PANTALLA ANTES DE OBTENER LA RESPUES 
+      /// PARA DAR UNA MEJOR UX , COMO:  TWITTER, FACEBOOK 
+      //setNotas(prevState => [...prevState, noteToUpload])
+      setError(false);
+      createNote(noteToUpload)
+        .then( data => {
+            setNotas(prev => [...prev,data])
+            setNewNote('')
+          }
+        )
+        .catch(err=>{
+          console.log(err)
+          setError(true)
+          setNewNote('')
+        })
+      }
+
     const handleChange = (e)=>{
-      setNewNote(e.target.value)
+      setNewNote(e.target.value)    
     }
-      
-    const handleChangeStatusNotes = ()=>{    
-      setShowAll(!showAll)
-    }
-    if(typeof notas === "undefined" || notas.length ===0){
-        return "NO tenemos notas que mostrar"
-    }    
+
+    
     return (
       <>
-        <h1>Notas app</h1>
-        <button onClick={handleChangeStatusNotes}>{showAll?'ver importantes ':"ver todas"}</button>
-        <ul>
+        <h1>Notas app</h1>    
+        {
+          loading ?"Cargando" : ""
+        }
+        
+        <ol>
             {
                 // el map transforma el valor : retorna algo
                 // podemos usar lo siguiente, pero no controlamos lo que pasamos
                 // <Nota {...nota} key={nota.id}/>
                 // lo mejor es especificar las props que se desean pasar
-                notas
-                  .filter(nota=>{
-                    if(showAll) return true
-                    return nota.important === true
-                  })
-                  .map(nota =>
-                     <Nota content={nota.content} date={nota.date} important={nota.important} key={nota.id}/> 
+                notas.map(nota =>
+                     <Nota title={nota.title} body={nota.body} key={nota.id}/> 
                   )
             }
-        </ul>
+        </ol>
+        <p style={{backgroundColor:"red"}}>{error ? 'Ha ocurrido un problema, estamos trabajando en ello ': ''}</p>
         <form onSubmit={handleSubmit}>
           <input type="text" value={newNote} onChange={handleChange} />
           <button >Agregar nota</button>
