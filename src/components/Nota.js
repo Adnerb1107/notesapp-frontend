@@ -1,9 +1,9 @@
-export const Nota = ({title, body}) =>{
+export const Nota = ({id,content, important, toogleImportance}) =>{
+    
     return (
-        <li>
-            <p>{title}</p>
-            <p>{body}</p>
-            
+        <li>            
+            {content}
+            <button onClick={toogleImportance}>{important ? 'Make not important ': 'Make important'}</button>
         </li>
     )
 }
